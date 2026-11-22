@@ -1,0 +1,91 @@
+const INITIAL_BOOKS = [
+  { id: 1, title: 'Dune', author: 'Frank Herbert', year: 1965, genre: 'science', read: true, rating: 5 },
+  { id: 2, title: '1984', author: 'George Orwell', year: 1949, genre: 'fiction', read: true, rating: 5 },
+  { id: 3, title: 'Sapiens', author: 'Yuval Noah Harari', year: 2011, genre: 'history', read: true, rating: 4 },
+  { id: 4, title: 'The Hobbit', author: 'J.R.R. Tolkien', year: 1937, genre: 'fantasy', read: false, rating: null },
+  { id: 5, title: 'Clean Code', author: 'Robert C. Martin', year: 2008, genre: 'non-fiction', read: true, rating: 4 },
+  { id: 6, title: 'Foundation', author: 'Isaac Asimov', year: 1951, genre: 'science', read: false, rating: null }
+];
+
+let books = INITIAL_BOOKS.map((book) => ({ ...book }));
+let nextId = 7;
+
+const delay = (ms = 25) => new Promise((resolve) => setTimeout(resolve, ms));
+
+export async function getAllBooks() {
+  await delay();
+  return books.map((book) => ({ ...book }));
+}
+
+export async function getBookById(id) {
+  await delay();
+  const found = books.find((b) => b.id === id);
+  return found ? { ...found } : null;
+}
+
+export async function hasDuplicate(title, author, excludeId = null) {
+  await delay(5);
+  const normTitle = title.trim().toLowerCase();
+  const normAuthor = author.trim().toLowerCase();
+  return books.some(
+    (b) =>
+      b.id !== excludeId &&
+      b.title.toLowerCase() === normTitle &&
+      b.author.toLowerCase() === normAuthor
+  );
+}
+
+export async function createBook(bookData) {
+  await delay();
+  const newBook = {
+    id: nextId++,
+    ...bookData
+  };
+  books = [...books, newBook];
+  return { ...newBook };
+}
+
+export async function replaceBook(id, bookData) {
+  await delay();
+  const exists = books.some((b) => b.id === id);
+  if (!exists) return null;
+
+  const updated = { id, ...bookData };
+  books = books.map((b) => (b.id === id ? updated : b));
+  return { ...updated };
+}
+
+export async function deleteBook(id) {
+  await delay();
+  const exists = books.some((b) => b.id === id);
+  if (!exists) return false;
+
+  books = books.filter((b) => b.id !== id);
+  return true;
+}
+
+export async function computeStats() {
+  await delay();
+  const total = books.length;
+  const readCount = books.filter((b) => b.read).length;
+  const unreadCount = total - readCount;
+
+  const ratedBooks = books.filter((b) => b.rating !== null);
+  const averageRating =
+    ratedBooks.length > 0
+      ? Number((ratedBooks.reduce((sum, b) => sum + b.rating, 0) / ratedBooks.length).toFixed(2))
+      : null;
+
+  const byGenre = books.reduce((acc, b) => {
+    acc[b.genre] = (acc[b.genre] || 0) + 1;
+    return acc;
+  }, {});
+
+  return {
+    total,
+    read: readCount,
+    unread: unreadCount,
+    averageRating,
+    byGenre
+  };
+}
